@@ -4,6 +4,8 @@ import org.scalatest.{ FunSpec, Matchers }
 import io.circe.Json
 import io.circe.syntax._
 import io.circe.generic.auto._
+import io.circe.parser.decode
+
 
 class CirceGameSpec extends FunSpec with Matchers {
   
@@ -20,20 +22,41 @@ class CirceGameSpec extends FunSpec with Matchers {
   val deal2Name = "jerry"
   val deal2Count = 4
   val deal2 = Deal(deal2Name, deal2Count)
- 
-  val somethingsName = "handful"
+
+  val somethingsWhat = "handful"
   val somethings = SomeThings(
-    somethingsName,
+    somethingsWhat,
     Vector(thing1, thing2),
     deal1
   )
 
-  describe("Run simple circe encoder") {
+  describe("Run implicit encoder on simple/complex case classes") {
     it("properly encodes things") {
-      val thing1JsonStringActual = """{"name":"bob","number":5.0}"""
-      println(thing1.asJson)
-      println(thing1.asJson.noSpaces)
-      thing1.asJson.noSpaces.toString shouldBe thing1JsonStringActual
+      val thing1JsonStringExpected = """{"name":"bob","number":5.0}"""
+      thing1.asJson.noSpaces.toString shouldBe thing1JsonStringExpected
+    }
+
+    it("properly encodes deals") {
+      val deal1JsonStringExpected = """{"name":"magpie","count":18}"""
+      deal1.asJson.noSpaces.toString shouldBe deal1JsonStringExpected
+    }
+
+    it("properly encodes SomeThings") {
+      val somethingsJsonStringExpected = """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}}"""
+      somethings.asJson.noSpaces.toString shouldBe somethingsJsonStringExpected
     }
   }
+
+  describe("Run implicit decoder on simple/complex case classes") {
+    it("properly decodes things") {
+      val thingString = """{"name":"bob","number":5.0}"""
+      val actual = decode[Thing](thingString)
+
+      actual shouldBe Right(thing1)
+    }
+  }
+
 }

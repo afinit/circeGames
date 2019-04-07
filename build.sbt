@@ -8,6 +8,6 @@ ThisBuild / organizationName := "mrka"
 lazy val root = (project in file("."))
   .settings(
     name := "circeGames",
-    libraryDependencies += scalaTest % Test
+    libraryDependencies ++= Dependencies.backendDeps.value
   )
 

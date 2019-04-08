@@ -3,7 +3,6 @@ package com.mrka.circegames
 import org.scalatest.{ FunSpec, Matchers }
 import io.circe.Json
 import io.circe.syntax._
-import io.circe.generic.auto._
 import io.circe.parser.decode
 
 
@@ -12,16 +11,19 @@ class CirceGameSpec extends FunSpec with Matchers {
   val thing1Name = "bob"
   val thing1Number = 5
   val thing1 = Thing(thing1Name, thing1Number)
+  val smartThing1 = SmartThing(thing1Name, thing1Number)
   val thing2Name = "nancy"
   val thing2Number = 1.01
   val thing2 = Thing(thing2Name, thing2Number)
+  val smartThing2 = SmartThing(thing2Name, thing2Number)
 
   val deal1Name = "magpie"
   val deal1Count = 18
   val deal1 = Deal(deal1Name, deal1Count)
+  val smartDeal1 = SmartDeal(deal1Name, deal1Count)
   val deal2Name = "jerry"
   val deal2Count = 4
-  val deal2 = Deal(deal2Name, deal2Count)
+  val smartDeal2 = SmartDeal(deal2Name, deal2Count)
 
   val somethingsWhat = "handful"
   val somethings = SomeThings(
@@ -29,8 +31,20 @@ class CirceGameSpec extends FunSpec with Matchers {
     Vector(thing1, thing2),
     deal1
   )
+  val smartSomethings = SmartSomeThings(
+    somethingsWhat,
+    Vector(smartThing1, smartThing2),
+    smartDeal1
+  )
 
-  describe("Run implicit encoder on simple/complex case classes") {
+  val allTheThingsWhy = "bc"
+  val allTheThings = AllTheThings(
+    stuff = somethings,
+    why = allTheThingsWhy
+  )
+
+  describe("Run autoderived encoder on simple/complex case classes") {
+    import io.circe.generic.auto._
     it("properly encodes things") {
       val thing1JsonStringExpected = """{"name":"bob","number":5.0}"""
       thing1.asJson.noSpaces.toString shouldBe thing1JsonStringExpected
@@ -48,14 +62,112 @@ class CirceGameSpec extends FunSpec with Matchers {
         """"deal":{"name":"magpie","count":18}}"""
       somethings.asJson.noSpaces.toString shouldBe somethingsJsonStringExpected
     }
+
+    it("properly encodes AllTheThings") {
+      val allTheThingsJsonStringExpected = """{"stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}},""" +
+        """"why":"bc"}"""
+
+      allTheThings.asJson.noSpaces.toString shouldBe allTheThingsJsonStringExpected
+    }
   }
 
-  describe("Run implicit decoder on simple/complex case classes") {
-    it("properly decodes things") {
+  describe("Run autoderived decoder on simple/complex case classes") {
+    import io.circe.generic.auto._
+    it("properly decodes Things") {
       val thingString = """{"name":"bob","number":5.0}"""
       val actual = decode[Thing](thingString)
 
       actual shouldBe Right(thing1)
+    }
+    
+    it("properly decodes Deals") {
+      val dealString = """{"name":"magpie","count":18}"""
+      val actual = decode[Deal](dealString)
+
+      actual shouldBe Right(deal1)
+    }
+
+    it("properly decodes SomeThings") {
+      val someThingString = """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}}"""
+      val actual = decode[SomeThings](someThingString)
+
+      actual shouldBe Right(somethings)
+    }
+
+    it("properly decodes AllTheThings") {
+      val allTheThingsString = """{"stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}},""" +
+        """"why":"bc"}"""
+      val actual = decode[AllTheThings](allTheThingsString)
+
+      actual shouldBe Right(allTheThings)
+    }
+
+    it("properly decodes AllTheThings out of order") {
+      val allTheThingsString = """{"why":"bc","stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}}}"""
+      val actual = decode[AllTheThings](allTheThingsString)
+
+      actual shouldBe Right(allTheThings)
+    }
+
+    it("properly decodes AllTheThings with extra info") {
+      val allTheThingsString = """{"why":"bc","stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}},""" +
+        """"someOtherField":34}"""
+      val actual = decode[AllTheThings](allTheThingsString)
+
+      actual shouldBe Right(allTheThings)
+    }
+
+  }
+
+  describe("Run custom codec encoder on simple/complex Json") {
+    it("properly encodes SmartThings") {
+      import SmartThing._
+      val smartThing1JsonStringExpected = """{"name":"bob","number":5.0}"""
+      smartThing1.asJson.noSpaces.toString shouldBe smartThing1JsonStringExpected
+    }
+
+    it("properly encodes SmartDeals") {
+      import SmartDeal._
+      val smartDeal1JsonStringExpected = """{"name":"magpie","count":18}"""
+      smartDeal1.asJson.noSpaces.toString shouldBe smartDeal1JsonStringExpected
+    }
+
+    it("properly encodes SmartSomeThings") {
+      import SmartSomeThings._
+      val smartSomethingsJsonStringExpected = """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}}"""
+
+      smartSomethings.asJson.noSpaces.toString shouldBe smartSomethingsJsonStringExpected
+    }
+  }
+
+  describe("Run custom codec decoder on simple/complex Json") {
+    it("properly decodes SmartThings") {
+      val smartThingString = """{"name":"bob","number":5.0}"""
+      val actual = decode[SmartThing](smartThingString)
+
+      actual shouldBe Right(smartThing1)
     }
   }
 

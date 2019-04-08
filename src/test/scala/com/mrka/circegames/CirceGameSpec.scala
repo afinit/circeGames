@@ -164,10 +164,30 @@ class CirceGameSpec extends FunSpec with Matchers {
 
   describe("Run custom codec decoder on simple/complex Json") {
     it("properly decodes SmartThings") {
+      import SmartThing._
       val smartThingString = """{"name":"bob","number":5.0}"""
       val actual = decode[SmartThing](smartThingString)
 
       actual shouldBe Right(smartThing1)
+    }
+
+    it("properly decodes SmartDeals") {
+      import SmartDeal._
+      val smartDealString = """{"name":"magpie","count":18}"""
+      val actual = decode[SmartDeal](smartDealString)
+
+      actual shouldBe Right(smartDeal1)
+    }
+
+    it("properly decodes SmartSomeThings") {
+      import SmartSomeThings._
+      val smartSomeThingString = """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}}"""
+      val actual = decode[SmartSomeThings](smartSomeThingString)
+
+      actual shouldBe Right(smartSomethings)
     }
   }
 

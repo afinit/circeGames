@@ -241,4 +241,13 @@ class CirceGameSpec extends FunSpec with Matchers {
     }
   }
 
+  describe("From file json") {
+    it("properly reads SomeThings from file (really just reads file into string and parses)") {
+      val jsonString = scala.io.Source.fromResource("someThings.json").getLines().mkString("")
+      val actual = decode[SmartSomeThings](jsonString)
+
+      actual shouldBe Right(smartSomethings)
+    }
+  }
+
 }

@@ -1,0 +1,17 @@
+{
+  "what": "handful",
+  "things": [
+    {
+      "name": "bob", 
+      "number": 5.0
+    },
+    {
+      "name": "nancy", 
+      "number": 1.01 
+    }
+  ],
+  "deal": {
+    "name": "magpie",
+    "count": 18
+  }
+}

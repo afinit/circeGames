@@ -92,3 +92,26 @@ object SmartSomeThings {
       } yield new SmartSomeThings(what, things, deal)
   }
 }
+
+case class SmartAllTheThings (
+  stuff: SmartSomeThings,
+  why: String
+)
+
+object SmartAllTheThings {
+  implicit val encodeSmartAllTheThings: Encoder[SmartAllTheThings] = new Encoder[SmartAllTheThings] {
+    final def apply(s: SmartAllTheThings): Json = Json.obj(
+      ("stuff", s.stuff.asJson),
+      ("why", Json.fromString(s.why))
+    )
+  }
+
+  implicit val decodeSmartAllTheThings: Decoder[SmartAllTheThings] = new Decoder[SmartAllTheThings] {
+    final def apply(c: HCursor): Decoder.Result[SmartAllTheThings] =
+      for {
+        stuff <- c.downField("stuff").as[SmartSomeThings]
+        why <- c.downField("why").as[String]
+      } yield SmartAllTheThings(stuff, why)
+  }
+}
+

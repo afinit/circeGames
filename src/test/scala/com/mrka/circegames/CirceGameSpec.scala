@@ -42,6 +42,10 @@ class CirceGameSpec extends FunSpec with Matchers {
     stuff = somethings,
     why = allTheThingsWhy
   )
+  val smartAllTheThings = SmartAllTheThings(
+    stuff = smartSomethings,
+    why = allTheThingsWhy
+  )
 
   describe("Run autoderived encoder on simple/complex case classes") {
     import io.circe.generic.auto._
@@ -160,6 +164,17 @@ class CirceGameSpec extends FunSpec with Matchers {
 
       smartSomethings.asJson.noSpaces.toString shouldBe smartSomethingsJsonStringExpected
     }
+
+    it("properly encodes SmartAllTheThings") {
+      val smartAllTheThingsJsonStringExpected = """{"stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}},""" +
+        """"why":"bc"}"""
+
+      smartAllTheThings.asJson.noSpaces.toString shouldBe smartAllTheThingsJsonStringExpected
+    }
   }
 
   describe("Run custom codec decoder on simple/complex Json") {
@@ -188,6 +203,41 @@ class CirceGameSpec extends FunSpec with Matchers {
       val actual = decode[SmartSomeThings](smartSomeThingString)
 
       actual shouldBe Right(smartSomethings)
+    }
+
+    it("properly decodes SmartAllTheThings") {
+      val smartAllTheThingsString = """{"stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}},""" +
+        """"why":"bc"}"""
+      val actual = decode[SmartAllTheThings](smartAllTheThingsString)
+
+      actual shouldBe Right(smartAllTheThings)
+    }
+
+    it("properly decodes SmartAllTheThings out of order") {
+      val smartAllTheThingsString = """{"why":"bc","stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}}}"""
+      val actual = decode[SmartAllTheThings](smartAllTheThingsString)
+
+      actual shouldBe Right(smartAllTheThings)
+    }
+
+    it("properly decodes SmartAllTheThings with extra info") {
+      val smartAllTheThingsString = """{"why":"bc","stuff":""" +
+        """{"what":"handful",""" +
+        """"things":[{"name":"bob","number":5.0},""" +
+        """{"name":"nancy","number":1.01}],""" +
+        """"deal":{"name":"magpie","count":18}},""" +
+        """"someOtherField":34}"""
+      val actual = decode[SmartAllTheThings](smartAllTheThingsString)
+
+      actual shouldBe Right(smartAllTheThings)
     }
   }
 

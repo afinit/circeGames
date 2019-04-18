@@ -95,23 +95,33 @@ object SmartSomeThings {
 
 case class SmartAllTheThings (
   stuff: SmartSomeThings,
-  why: String
+  why: String,
+  questionable: Option[Int] = None
 )
 
 object SmartAllTheThings {
   implicit val encodeSmartAllTheThings: Encoder[SmartAllTheThings] = new Encoder[SmartAllTheThings] {
     final def apply(s: SmartAllTheThings): Json = Json.obj(
       ("stuff", s.stuff.asJson),
-      ("why", Json.fromString(s.why))
-    )
+      ("why", Json.fromString(s.why)),
+      ("questionable", s.questionable match {
+        case Some(v) => Json.fromInt(v)
+        case None => Json.Null
+      })
+    ).mapObject(_.filter { case (_,v) => !v.isNull })
   }
 
   implicit val decodeSmartAllTheThings: Decoder[SmartAllTheThings] = new Decoder[SmartAllTheThings] {
-    final def apply(c: HCursor): Decoder.Result[SmartAllTheThings] =
+    final def apply(c: HCursor): Decoder.Result[SmartAllTheThings] = {
+      val q = c.downField("questionable").as[Int] match {
+          case Right(v) => Some(v)
+          case Left(_) => None
+        }
       for {
         stuff <- c.downField("stuff").as[SmartSomeThings]
         why <- c.downField("why").as[String]
-      } yield SmartAllTheThings(stuff, why)
+      } yield SmartAllTheThings(stuff, why, q)
+    }
   }
 }
 
